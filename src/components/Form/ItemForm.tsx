@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addItem, updateItem } from "../../core/redux/features/crud/crudThunks";
-import { AppDispatch } from "../../core/redux/store";
+import { AppDispatch, RootState } from "../../core/redux/store";
 
 interface ItemFromProps {
   selectedItem: ICrudItem | null;
@@ -10,6 +10,7 @@ interface ItemFromProps {
 
 const ItemForm: React.FC<ItemFromProps> = ({ selectedItem, onClear }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { status, error } = useSelector((state: RootState) => state.crud);
   const [title, setTitle] = useState("");
 
   useEffect(() => {
@@ -30,15 +31,27 @@ const ItemForm: React.FC<ItemFromProps> = ({ selectedItem, onClear }) => {
     onClear();
   };
 
+  const isLoading = status === "loading";
+
   return (
     <form onSubmit={handleSubmit}>
-      <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter item title" />
-      <button type="submit">{selectedItem ? "Update" : "Add"}</button>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        disabled={isLoading}
+        placeholder="Enter item title"
+      />
+      <button type="submit" disabled={isLoading}>
+        {selectedItem ? (isLoading ? "Updating..." : "Update") : isLoading ? "Adding" : "Add"}
+      </button>
       {selectedItem && (
         <button type="button" onClick={onClear}>
           Clear
         </button>
       )}
+      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {isLoading && <p>Loading...</p>}
     </form>
   );
 };
